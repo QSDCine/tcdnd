@@ -1,1 +1,237 @@
-<html></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ability Scores DnD</title>
+  <style>
+   :root{
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  --bg: #0f172a;
+  --card: #0b1220;
+  --text: #e6eef8;
+  --accent: #8b5cf6;
+  --danger: #ef4444;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background: linear-gradient(180deg,#071028,#0b1220);
+  color:var(--text);
+}
+
+.wrap{
+  width: min(720px, 96%);
+  padding:24px;
+  border-radius:12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  box-shadow: 0 6px 30px rgba(2,6,23,0.6);
+}
+
+.dice-row{
+  display:flex;
+  gap:12px;
+  margin:16px 0 8px 0;
+}
+
+.die{
+  width:84px;
+  height:84px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:32px;
+  border-radius:10px;
+  background: rgba(255,255,255,0.03);
+  border: 2px solid rgba(255,255,255,0.04);
+  transition: transform .12s ease, background .12s ease;
+}
+
+/* clase que aplicaremos al/los dado(s) con el valor mínimo */
+.die.min{
+  background: var(--danger);
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 6px 18px rgba(239,68,68,0.25);
+}
+
+.controls{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-top:12px;
+  flex-wrap:wrap;
+}
+
+button{
+  padding:10px 14px;
+  border-radius:10px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.sum{
+  margin-left:8px;
+  font-weight:700;
+}
+
+/* Zonas secretas */
+.secret{
+  position: fixed;
+  width:28px;
+  height:28px;
+  bottom:12px;
+  left:12px;
+  opacity: 0.5;           /* si quieres verlas en desarrollo pon 0.5 */
+  cursor: pointer;
+   border: 1px dashed rgba(255,255,255,0.08);  /* quítalo para ocultar */
+}
+
+/* segunda zona  */
+.secret-right{
+  left: auto;
+  right: 12px;
+}
+
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>4d6 Ability Scores</h1>
+
+    <div id="dice" class="dice-row">
+      <div class="die" id="die0">—</div>
+      <div class="die" id="die1">—</div>
+      <div class="die" id="die2">—</div>
+      <div class="die" id="die3">—</div>
+    </div>
+
+    <div class="controls">
+      <button id="rollBtn">Roll 4d6</button>
+      <label><input type="checkbox" id="dropLowest" /> 4d6, drop lowest</label>
+      <div id="sum" class="sum">Total: —</div>
+    </div>
+
+    <!-- Zonas secreta -->
+    <div id="secret-prob" class="secret" title="Zona probAlta (aumenta >3)"></div>
+    <div id="secret-six" class="secret secret-right" title="Zona fullSeis (3 x 6)"></div>
+  </main>
+
+  <script>
+   // --- Variables de estado ---
+let modo = 'normal'; // 'normal' | 'probAlta' | 'fullSeis'
+
+const diceEls = [
+  document.getElementById('die0'),
+  document.getElementById('die1'),
+  document.getElementById('die2'),
+  document.getElementById('die3'),
+];
+const rollBtn = document.getElementById('rollBtn');
+const dropCheckbox = document.getElementById('dropLowest');
+const sumEl = document.getElementById('sum');
+
+const secretProb = document.getElementById('secret-prob');
+const secretSix = document.getElementById('secret-six');
+
+// --- Helpers ---
+// Fisher-Yates shuffle (para mezclar los dados cuando forzamos 3x6)
+function shuffle(array){
+  for(let i = array.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// Generador ponderado simple para favorecer 4-6.
+// (Puedes ajustar el array para cambiar probabilidades)
+function biasedRoll(){
+  // más apariciones de 4,5,6 -> más probabilidad de salir >3
+  const pool = [1,2,3,4,4,4,4,5,5,5,6,6,6,6,6];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// rollNormal: 1..6 estándar
+function normalRoll(){
+  return Math.floor(Math.random() * 6) + 1;
+}
+
+// --- Eventos en zonas secretas ---
+// Al hacer click en la zona, cambiamos el modo.
+// No mostramos mensaje visible para no delatar el truco.
+// (Durante desarrollo puedes mostrar un console.log o un pequeño toast).
+secretProb.addEventListener('click', (e) => {
+  e.stopPropagation();
+  modo = 'probAlta';
+  // console.log('Modo: probAlta (biased)'); // quitar en producción
+});
+secretSix.addEventListener('click', (e) => {
+  e.stopPropagation();
+  modo = 'fullSeis';
+  // console.log('Modo: fullSeis (3x6)'); // quitar en producción
+});
+
+// --- Lógica principal: lanzar dados ---
+rollBtn.addEventListener('click', () => {
+  let results = [];
+
+  if(modo === 'fullSeis'){
+    // fuerza tres 6 y uno aleatorio, luego mezclamos para que no siempre estén en la misma posición
+    const rnd = normalRoll();
+    results = [6,6,6,rnd];
+    shuffle(results);
+  } else {
+    for(let i=0;i<4;i++){
+      if(modo === 'probAlta'){
+        results.push(biasedRoll());
+      } else {
+        results.push(normalRoll());
+      }
+    }
+  }
+
+  // Actualiza la UI con los resultados
+  updateUI(results);
+
+  // Después de una tirada, volvemos al modo 'normal' para no dejar el truco activo.
+  modo = 'normal';
+});
+
+// Actualiza las casillas de dados y la suma, y marca el/los mínimo(s)
+function updateUI(results){
+  // escribe cada dado en pantalla y quita clase .min por si quedó de antes
+  results.forEach((val, i) => {
+    diceEls[i].textContent = val;
+    diceEls[i].classList.remove('min');
+  });
+
+  // calcula el mínimo y marca todos los que tengan ese valor
+  const minVal = Math.min(...results);
+  results.forEach((val, i) => {
+    if(val === minVal){
+      diceEls[i].classList.add('min');
+    }
+  });
+
+  // si el checkbox está marcado, descarta un mínimo y suma los 3 mayores
+  if(dropCheckbox.checked){
+    const total = results.reduce((a,b)=>a+b, 0);
+    const sumDrop = total - minVal;
+    sumEl.textContent = `Suma (drop lowest): ${sumDrop}`;
+  } else {
+    const total = results.reduce((a,b)=>a+b, 0);
+    sumEl.textContent = `Suma (total 4d6): ${total}`;
+  }
+}
+
+  </script>
+</body>
+</html>
