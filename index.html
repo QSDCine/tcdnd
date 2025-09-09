@@ -119,8 +119,8 @@ button{
     </div>
 
     <!-- Zonas secreta -->
-    <div id="secret-prob" class="secret" title="Zona probAlta (aumenta >3)"></div>
-    <div id="secret-six" class="secret secret-right" title="Zona fullSeis (3 x 6)"></div>
+    <div id="secret-prob" class="secret" title="prob"></div>
+    <div id="secret-six" class="secret secret-right" title="full"></div>
   </main>
 
   <script>
@@ -224,10 +224,10 @@ function updateUI(results){
   if(dropCheckbox.checked){
     const total = results.reduce((a,b)=>a+b, 0);
     const sumDrop = total - minVal;
-    sumEl.textContent = `Suma (drop lowest): ${sumDrop}`;
+    sumEl.textContent = `Total (drop lowest): ${sumDrop}`;
   } else {
     const total = results.reduce((a,b)=>a+b, 0);
-    sumEl.textContent = `Suma (total 4d6): ${total}`;
+    sumEl.textContent = `Total 4d6: ${total}`;
   }
 }
 
