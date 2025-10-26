@@ -83,14 +83,12 @@ button{
 }
 
 /* Zonas secretas */
-.secret{
-  position: fixed;
-  width:28px;
-  height:28px;
-  bottom:12px;
-  left:12px;
-  opacity: 0;           
-  cursor: pointer;
+.secret {
+
+ 
+  user-select: none;
+
+
 }
 
 /* segunda zona  */
@@ -103,7 +101,7 @@ button{
 </head>
 <body>
   <main class="wrap">
-    <h1>4d6 Ability Scores</h1>
+      <h1><span id="secret-prob" class="secret" title="prob">4d6</span> Ability <span id="secret-six" class="secret secret-right" title="full">Scores</span></h1>
 
     <div id="dice" class="dice-row">
       <div class="die" id="die0">—</div>
@@ -118,9 +116,7 @@ button{
       <div id="sum" class="sum">Total: —</div>
     </div>
 
-    <!-- Zonas secreta -->
-    <div id="secret-prob" class="secret" title="prob"></div>
-    <div id="secret-six" class="secret secret-right" title="full"></div>
+
   </main>
 
   <script>
