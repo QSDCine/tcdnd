@@ -69,7 +69,7 @@ body{
   flex-wrap:wrap;
 }
 
-button{
+button {
   padding:10px 14px;
   border-radius:10px;
   border: none;
@@ -98,7 +98,27 @@ button{
   left: auto;
   right: 12px;
 }
+      
+.history-section {
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
+#history {
+  font-weight: 600;
+  background: rgba(255,255,255,0.03);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+      
+      #sortBtn {
+          width: 80px;
+          
+      }
+      
   </style>
 </head>
 <body>
@@ -117,7 +137,10 @@ button{
       <label><input type="checkbox" id="dropLowest" /> 4d6, drop lowest</label>
       <div id="sum" class="sum">Total: —</div>
     </div>
-
+<div class="history-section">
+  <button id="sortBtn">Ordenar ↓</button>
+  <div id="history" class="history">Last 6 dice rolls: —</div>
+</div>
 
   </main>
 
@@ -137,6 +160,10 @@ const sumEl = document.getElementById('sum');
 
 const secretProb = document.getElementById('secret-prob');
 const secretSix = document.getElementById('secret-six');
+      
+      const historyEl = document.getElementById('history');
+const sortBtn = document.getElementById('sortBtn');
+let history = [];
 
 // --- Helpers ---
 // Fisher-Yates shuffle (para mezclar los dados cuando forzamos 3x6)
@@ -195,8 +222,18 @@ rollBtn.addEventListener('click', () => {
     }
   }
 
-  // Actualiza la UI con los resultados
-  updateUI(results);
+// Calcula el total antes de actualizar la UI
+const minVal = Math.min(...results);
+const total = results.reduce((a,b) => a + b, 0);
+const sumDrop = dropCheckbox.checked ? total - minVal : total;
+
+// Actualiza la UI
+updateUI(results);
+
+// Actualiza historial
+history.unshift(sumDrop);
+if (history.length > 6) history.pop();
+updateHistory();
 
   // --- Listener de teclado ---
 document.addEventListener("keydown", function(event) {
@@ -245,6 +282,14 @@ function updateUI(results){
     sumEl.textContent = `Total 4d6: ${total}`;
   }
 }
+      function updateHistory(){
+  historyEl.textContent = `Last 6 dice rolls: ${history.join(', ')}`;
+}
+      
+      sortBtn.addEventListener('click', () => {
+  history.sort((a,b) => b - a);
+  updateHistory();
+});
 
   </script>
     <script>
@@ -258,6 +303,8 @@ if ("serviceWorker" in navigator) {
         // console.error("Error al registrar el Service Worker:", err);
       });
   });
+    
+    
 }</script>
 </body>
 </html>
