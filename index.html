@@ -3,7 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ability Scores DnD</title>
+    <link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#8b5cf6" />
+  <title>Ability Scores D&amp;D</title>
   <style>
    :root{
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
@@ -245,5 +247,17 @@ function updateUI(results){
 }
 
   </script>
+    <script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("service-worker.js")
+      .then(reg => {
+        // console.log("Service Worker registrado:", reg);
+      })
+      .catch(err => {
+        // console.error("Error al registrar el Service Worker:", err);
+      });
+  });
+}</script>
 </body>
 </html>
